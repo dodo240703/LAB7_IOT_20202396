@@ -65,4 +65,17 @@
     <string name="default_web_client_id">123456789012-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com</string>
     <string name="facebook_app_id">1223362608997424</string>
     <string name="facebook_client_token">6d7d192f071fd4f1a87f6c149057d80d</string>
+
+    <!-- Comprobantes de imagen -->
+    <string name="receipt">Comprobante</string>
+    <string name="receipt_image">Imagen de comprobante</string>
+    <string name="select_image">Seleccionar imagen</string>
+    <string name="no_image_selected">Ninguna imagen seleccionada</string>
+    <string name="image_selected">Imagen seleccionada</string>
+    <string name="download_image">Descargar imagen</string>
+    <string name="view_receipt">Ver comprobante</string>
+    <string name="download_success">Imagen descargada correctamente</string>
+    <string name="download_error">Error al descargar la imagen</string>
+    <string name="error_no_receipt">Este registro no tiene comprobante</string>
+    <string name="receipt_required">El comprobante es obligatorio</string>
 </resources>

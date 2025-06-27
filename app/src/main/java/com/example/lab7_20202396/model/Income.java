@@ -14,46 +14,51 @@ public class Income {
     private String description;
     private Date date;  // Usar Date en lugar de long
     private String userId;
+    private String imageUrl; // URL del comprobante
 
     // Constructor vacío requerido para Firebase
     public Income() {
     }
 
-    public Income(String id, String title, double amount, String description, Date date, String userId) {
+    public Income(String id, String title, double amount, String description, Date date, String userId, String imageUrl) {
         this.id = id;
         this.title = title;
         this.amount = amount;
         this.description = description;
         this.date = date;
         this.userId = userId;
+        this.imageUrl = imageUrl;
     }
 
     // Constructor alternativo que acepta long para compatibilidad con código existente
-    public Income(String id, String title, double amount, String description, long timestamp, String userId) {
+    public Income(String id, String title, double amount, String description, long timestamp, String userId, String imageUrl) {
         this.id = id;
         this.title = title;
         this.amount = amount;
         this.description = description;
         this.date = new Date(timestamp);
         this.userId = userId;
+        this.imageUrl = imageUrl;
     }
 
     // Constructor sin ID para cuando se crea un nuevo ingreso
-    public Income(String title, double amount, String description, Date date, String userId) {
+    public Income(String title, double amount, String description, Date date, String userId, String imageUrl) {
         this.title = title;
         this.amount = amount;
         this.description = description;
         this.date = date;
         this.userId = userId;
+        this.imageUrl = imageUrl;
     }
 
     // Constructor sin ID que acepta long para compatibilidad con código existente
-    public Income(String title, double amount, String description, long timestamp, String userId) {
+    public Income(String title, double amount, String description, long timestamp, String userId, String imageUrl) {
         this.title = title;
         this.amount = amount;
         this.description = description;
         this.date = new Date(timestamp);
         this.userId = userId;
+        this.imageUrl = imageUrl;
     }
 
     // Convertir a Map para Firebase
@@ -64,6 +69,7 @@ public class Income {
         result.put("description", description);
         result.put("date", date);  // Firebase convertirá automáticamente Date a Timestamp
         result.put("userId", userId);
+        result.put("imageUrl", imageUrl);
         return result;
     }
 
@@ -124,5 +130,13 @@ public class Income {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

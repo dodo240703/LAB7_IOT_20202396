@@ -1,14 +1,28 @@
 package com.example.lab7_20202396;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.DatePickerDialog;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -16,6 +30,7 @@ import com.example.lab7_20202396.adapters.ExpenseAdapter;
 import com.example.lab7_20202396.databinding.FragmentExpensesBinding;
 import com.example.lab7_20202396.model.Expense;
 import com.example.lab7_20202396.service.FinanceService;
+import com.example.lab7_20202396.service.ServicioAlmacenamiento;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -29,9 +44,24 @@ public class ExpensesFragment extends Fragment {
 
     private FragmentExpensesBinding binding;
     private FinanceService financeService;
+    private ServicioAlmacenamiento servicioAlmacenamiento;
     private ExpenseAdapter adapter;
     private List<Expense> expensesList;
     private Calendar selectedDate;
+
+    // Variables para la selección de imágenes
+    private Uri selectedImageUri = null;
+    private TextView tvImageStatus;
+    private static final String TAG = "ExpensesFragment";
+
+    // Lanzadores para permisos y selección de imágenes
+    private ActivityResultLauncher<String> requestPermissionLauncher;
+    private ActivityResultLauncher<Intent> imagePickerLauncher;
+
+    private View currentDialogView;
+
+    // Constante para la selección de imágenes
+    private static final int REQUEST_IMAGE_PICK = 100;
 
     @Nullable
     @Override
@@ -45,6 +75,7 @@ public class ExpensesFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         financeService = new FinanceService();
+        servicioAlmacenamiento = new ServicioAlmacenamiento();
         expensesList = new ArrayList<>();
         selectedDate = Calendar.getInstance();
 
@@ -52,6 +83,42 @@ public class ExpensesFragment extends Fragment {
         setupAddButton();
         updateMonthText();
         loadExpenses();
+
+        // Inicializar lanzadores
+        requestPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (isGranted) {
+                        // Permiso concedido, abrir selector de imágenes
+                        openImagePicker();
+                    } else {
+                        // Permiso denegado
+                        Toast.makeText(requireContext(),
+                                "Se requiere permiso para acceder a las imágenes",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        // Inicializar el lanzador para la selección de imágenes
+        imagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data != null && data.getData() != null) {
+                            selectedImageUri = data.getData();
+                            Log.d(TAG, "Imagen seleccionada: " + selectedImageUri);
+
+                            // Actualizar UI si el diálogo sigue visible
+                            if (currentDialogView != null) {
+                                TextView statusText = currentDialogView.findViewById(R.id.tvImageStatus);
+                                if (statusText != null) {
+                                    statusText.setText("Imagen seleccionada");
+                                }
+                            }
+                        }
+                    }
+                });
 
         // Botones para cambiar de mes
         binding.buttonPreviousMonth.setOnClickListener(v -> {
@@ -124,6 +191,9 @@ public class ExpensesFragment extends Fragment {
         TextInputEditText etAmount = dialogView.findViewById(R.id.etAmount);
         TextInputEditText etDescription = dialogView.findViewById(R.id.etDescription);
         TextInputEditText etDate = dialogView.findViewById(R.id.etDate);
+        tvImageStatus = dialogView.findViewById(R.id.tvImageStatus);
+
+        currentDialogView = dialogView; // Guardar referencia del diálogo actual
 
         // Configurar selector de fecha
         Calendar calendar = Calendar.getInstance();
@@ -144,6 +214,16 @@ public class ExpensesFragment extends Fragment {
                     calendar.get(Calendar.DAY_OF_MONTH)
             );
             datePickerDialog.show();
+        });
+
+        dialogView.findViewById(R.id.btnSelectImage).setOnClickListener(v -> {
+            // Verificar y solicitar permiso de lectura de almacenamiento
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
+            } else {
+                openImagePicker();
+            }
         });
 
         new MaterialAlertDialogBuilder(requireContext())
@@ -172,13 +252,59 @@ public class ExpensesFragment extends Fragment {
                             amount,
                             description,
                             calendar.getTimeInMillis(),
-                            financeService.getCurrentUser().getUid()
+                            financeService.getCurrentUser().getUid(),
+                            null  // imageUrl - será actualizada después de subir la imagen
                     );
 
                     saveExpense(expense);
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
+    }
+
+    private void openImagePicker() {
+        try {
+            Intent intent = new Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+
+            // Usar Intent.createChooser para mostrar un selector más amigable
+            startActivityForResult(
+                    Intent.createChooser(intent, "Seleccionar imagen"),
+                    REQUEST_IMAGE_PICK
+            );
+
+            // Registrar el intento para depuración
+            Log.d(TAG, "Intent para seleccionar imagen lanzado");
+        } catch (Exception e) {
+            Log.e(TAG, "Error al abrir selector de imágenes: " + e.getMessage(), e);
+            Toast.makeText(requireContext(),
+                    "Error al abrir el selector de imágenes: " + e.getMessage(),
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Implementamos el método tradicional como respaldo
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_IMAGE_PICK && resultCode == Activity.RESULT_OK) {
+            if (data != null && data.getData() != null) {
+                selectedImageUri = data.getData();
+                Log.d(TAG, "Imagen seleccionada (método tradicional): " + selectedImageUri);
+
+                // Actualizar UI si el diálogo sigue visible
+                if (currentDialogView != null) {
+                    TextView statusText = currentDialogView.findViewById(R.id.tvImageStatus);
+                    if (statusText != null) {
+                        statusText.setText("Imagen seleccionada");
+                    }
+                }
+            }
+        }
     }
 
     private void showEditDeleteDialog(Expense expense) {
@@ -200,6 +326,9 @@ public class ExpensesFragment extends Fragment {
         TextInputEditText etAmount = dialogView.findViewById(R.id.etAmount);
         TextInputEditText etDescription = dialogView.findViewById(R.id.etDescription);
         TextInputEditText etDate = dialogView.findViewById(R.id.etDate);
+        tvImageStatus = dialogView.findViewById(R.id.tvImageStatus);
+
+        currentDialogView = dialogView; // Guardar referencia del diálogo actual
 
         // Cargar datos del gasto
         etTitle.setText(expense.getTitle());
@@ -227,6 +356,16 @@ public class ExpensesFragment extends Fragment {
                     calendar.get(Calendar.DAY_OF_MONTH)
             );
             datePickerDialog.show();
+        });
+
+        dialogView.findViewById(R.id.btnSelectImage).setOnClickListener(v -> {
+            // Verificar y solicitar permiso de lectura de almacenamiento
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
+            } else {
+                openImagePicker();
+            }
         });
 
         new MaterialAlertDialogBuilder(requireContext())
@@ -274,9 +413,36 @@ public class ExpensesFragment extends Fragment {
     private void saveExpense(Expense expense) {
         binding.progressBar.setVisibility(View.VISIBLE);
 
+        // Si hay una imagen seleccionada, subirla primero
+        if (selectedImageUri != null) {
+            // Mostrar mensaje de carga
+            Toast.makeText(requireContext(), "Subiendo imagen...", Toast.LENGTH_SHORT).show();
+
+            String userId = financeService.getCurrentUser().getUid();
+            servicioAlmacenamiento.guardarArchivo(selectedImageUri, "egreso", userId)
+                    .addOnSuccessListener(imageUrl -> {
+                        // Establecer la URL de la imagen en el gasto
+                        expense.setImageUrl(imageUrl.toString());
+
+                        // Guardar el gasto con la URL de la imagen
+                        finishSaveExpense(expense);
+                    })
+                    .addOnFailureListener(e -> {
+                        binding.progressBar.setVisibility(View.GONE);
+                        Toast.makeText(requireContext(), "Error al subir la imagen: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+        } else {
+            // No hay imagen, guardar el gasto directamente
+            finishSaveExpense(expense);
+        }
+    }
+
+    private void finishSaveExpense(Expense expense) {
         financeService.saveExpense(expense)
                 .addOnSuccessListener(aVoid -> {
                     binding.progressBar.setVisibility(View.GONE);
+                    // Limpiar la URI de la imagen seleccionada
+                    selectedImageUri = null;
                     Toast.makeText(requireContext(), R.string.expense_saved, Toast.LENGTH_SHORT).show();
                     loadExpenses(); // Recargar lista
                 })
@@ -289,9 +455,50 @@ public class ExpensesFragment extends Fragment {
     private void updateExpense(Expense expense) {
         binding.progressBar.setVisibility(View.VISIBLE);
 
+        // Si hay una imagen seleccionada, subirla primero
+        if (selectedImageUri != null) {
+            // Mostrar mensaje de carga
+            Toast.makeText(requireContext(), "Actualizando imagen...", Toast.LENGTH_SHORT).show();
+
+            // Si el gasto ya tenía una imagen, eliminarla primero
+            if (expense.getImageUrl() != null && !expense.getImageUrl().isEmpty()) {
+                servicioAlmacenamiento.eliminarArchivo(expense.getImageUrl())
+                        .addOnCompleteListener(task -> {
+                            // Continuar con la subida de la nueva imagen independientemente del resultado
+                            uploadNewImageAndUpdate(expense);
+                        });
+            } else {
+                // No había imagen previa, subir la nueva directamente
+                uploadNewImageAndUpdate(expense);
+            }
+        } else {
+            // No hay cambios en la imagen, actualizar el gasto directamente
+            finishUpdateExpense(expense);
+        }
+    }
+
+    private void uploadNewImageAndUpdate(Expense expense) {
+        String userId = financeService.getCurrentUser().getUid();
+        servicioAlmacenamiento.guardarArchivo(selectedImageUri, "egreso", userId)
+                .addOnSuccessListener(imageUrl -> {
+                    // Establecer la URL de la imagen en el gasto
+                    expense.setImageUrl(imageUrl.toString());
+
+                    // Guardar el gasto con la URL de la imagen
+                    finishUpdateExpense(expense);
+                })
+                .addOnFailureListener(e -> {
+                    binding.progressBar.setVisibility(View.GONE);
+                    Toast.makeText(requireContext(), "Error al subir la imagen: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void finishUpdateExpense(Expense expense) {
         financeService.updateExpense(expense)
                 .addOnSuccessListener(aVoid -> {
                     binding.progressBar.setVisibility(View.GONE);
+                    // Limpiar la URI de la imagen seleccionada
+                    selectedImageUri = null;
                     Toast.makeText(requireContext(), R.string.expense_updated, Toast.LENGTH_SHORT).show();
                     loadExpenses(); // Recargar lista
                 })

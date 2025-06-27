@@ -204,7 +204,7 @@ public class ExpenseFragment extends Fragment {
 
             // Convertir Date a long (timestamp)
             long timestamp = date.getTime();
-            Expense expense = new Expense(id, title, amount, description, timestamp, userId);
+            Expense expense = new Expense(id, title, amount, description, timestamp, userId, null); // null para imageUrl
 
             db.collection("expenses")
                     .document(id)

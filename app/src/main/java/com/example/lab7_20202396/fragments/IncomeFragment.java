@@ -204,7 +204,7 @@ public class IncomeFragment extends Fragment {
 
             // Convertir Date a long (timestamp)
             long timestamp = date.getTime();
-            Income income = new Income(id, title, amount, description, timestamp, userId);
+            Income income = new Income(id, title, amount, description, timestamp, userId, null); // null para imageUrl
 
             db.collection("incomes")
                     .document(id)
