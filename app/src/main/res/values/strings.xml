@@ -1,3 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">lab7_20202396</string>
+    <string name="app_name">Lab7_20202396</string>
+    <string name="app_name_long">Sistema de Gestión de Dinero</string>
+    <string name="app_logo">Logo de la aplicación</string>
+    <string name="email">Correo electrónico</string>
+    <string name="password">Contraseña</string>
+    <string name="confirm_password">Confirmar contraseña</string>
+    <string name="login">Iniciar sesión</string>
+    <string name="register">Registrarse</string>
+    <string name="register_new_account">¿No tienes cuenta? Regístrate</string>
+    <string name="login_with_google">Iniciar sesión con Google</string>
+    <string name="login_with_facebook">Iniciar sesión con Facebook</string>
+    <string name="or">O</string>
+
+    <!-- Navegación -->
+    <string name="income">Ingresos</string>
+    <string name="expenses">Egresos</string>
+    <string name="summary">Resumen</string>
+    <string name="logout">Cerrar Sesión</string>
+
+    <!-- Formularios -->
+    <string name="title">Título</string>
+    <string name="amount">Monto</string>
+    <string name="description">Descripción (opcional)</string>
+    <string name="date">Fecha</string>
+    <string name="save">Guardar</string>
+    <string name="update">Actualizar</string>
+    <string name="delete">Eliminar</string>
+    <string name="add">Añadir</string>
+    <string name="edit">Editar</string>
+
+    <!-- Mensajes -->
+    <string name="login_success">Inicio de sesión exitoso</string>
+    <string name="login_error">Error al iniciar sesión</string>
+    <string name="register_success">Registro exitoso</string>
+    <string name="register_error">Error al registrar cuenta</string>
+    <string name="required_field">Campo obligatorio</string>
+    <string name="passwords_not_match">Las contraseñas no coinciden</string>
+    <string name="loading">Cargando…</string>
+    <string name="error">Error</string>
+    <string name="confirm_delete">¿Estás seguro de eliminar este registro?</string>
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+    <string name="income_saved">Ingreso guardado exitosamente</string>
+    <string name="expense_saved">Egreso guardado exitosamente</string>
+    <string name="income_updated">Ingreso actualizado exitosamente</string>
+    <string name="expense_updated">Egreso actualizado exitosamente</string>
+    <string name="income_deleted">Ingreso eliminado exitosamente</string>
+    <string name="expense_deleted">Egreso eliminado exitosamente</string>
+    <string name="select_month">Seleccionar mes</string>
+    <string name="total_income">Ingresos totales</string>
+    <string name="total_expense">Egresos totales</string>
+    <string name="balance">Balance</string>
+    <string name="percentage">Porcentaje</string>
+    <string name="income_expense_summary">Resumen de Ingresos y Egresos</string>
+
+    <!-- Firebase y Facebook config (Valores de ejemplo) -->
+    <string name="default_web_client_id">123456789012-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com</string>
+    <string name="facebook_app_id">123456789012345</string>
+    <string name="facebook_client_token">abcdef123456ghijkl7890mnopqrstuv</string>
 </resources>

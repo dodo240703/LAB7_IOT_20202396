@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "585872808903",
+    "project_id": "dodoproyecto-3a024",
+    "storage_bucket": "dodoproyecto-3a024.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:585872808903:android:5da8a445a29b4e404597e2",
+        "android_client_info": {
+          "package_name": "com.example.lab7_20202396"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrFWhZgRQcsiOHXpZucdHYi0AiE_23xs8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
