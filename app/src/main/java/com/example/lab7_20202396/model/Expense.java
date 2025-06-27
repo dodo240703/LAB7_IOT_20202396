@@ -5,53 +5,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Modelo para representar un gasto
+ * Modelo de datos para los gastos
  */
 public class Expense {
+
     private String id;
     private String title;
     private double amount;
     private String description;
-    private Date date;  // Cambiado de long a Date
+    private Date date;
     private String userId;
-    private String imageUrl; // URL del comprobante
+    private String imageUrl;
 
-    // Constructor vacío requerido para Firebase
-    public Expense() {
-    }
+    // Constructor vacío requerido por Firebase
+    public Expense() {}
 
-    public Expense(String id, String title, double amount, String description, Date date, String userId, String imageUrl) {
-        this.id = id;
-        this.title = title;
-        this.amount = amount;
-        this.description = description;
-        this.date = date;
-        this.userId = userId;
-        this.imageUrl = imageUrl;
-    }
-
-    // Constructor alternativo que acepta long para compatibilidad con código existente
-    public Expense(String id, String title, double amount, String description, long timestamp, String userId, String imageUrl) {
-        this.id = id;
-        this.title = title;
-        this.amount = amount;
-        this.description = description;
-        this.date = new Date(timestamp);
-        this.userId = userId;
-        this.imageUrl = imageUrl;
-    }
-
-    // Constructor sin ID para cuando se crea un nuevo gasto
-    public Expense(String title, double amount, String description, Date date, String userId, String imageUrl) {
-        this.title = title;
-        this.amount = amount;
-        this.description = description;
-        this.date = date;
-        this.userId = userId;
-        this.imageUrl = imageUrl;
-    }
-
-    // Constructor sin ID que acepta long para compatibilidad con código existente
+    // Constructor principal
     public Expense(String title, double amount, String description, long timestamp, String userId, String imageUrl) {
         this.title = title;
         this.amount = amount;
@@ -61,16 +30,15 @@ public class Expense {
         this.imageUrl = imageUrl;
     }
 
-    // Convertir a Map para Firebase
-    public Map<String, Object> toMap() {
-        HashMap<String, Object> result = new HashMap<>();
-        result.put("title", title);
-        result.put("amount", amount);
-        result.put("description", description);
-        result.put("date", date);  // Firebase convertirá automáticamente Date a Timestamp
-        result.put("userId", userId);
-        result.put("imageUrl", imageUrl);
-        return result;
+    // Constructor adicional para Firestore (con ID como primer parámetro)
+    public Expense(String id, String title, double amount, String description, long timestamp, String userId, String imageUrl) {
+        this.id = id;
+        this.title = title;
+        this.amount = amount;
+        this.description = description;
+        this.date = new Date(timestamp);
+        this.userId = userId;
+        this.imageUrl = imageUrl;
     }
 
     // Getters y Setters
@@ -114,16 +82,6 @@ public class Expense {
         this.date = date;
     }
 
-    // Métodos adicionales para manejar conversiones de timestamp
-    public long getDateAsTimestamp() {
-        return date != null ? date.getTime() : 0;
-    }
-
-    // Renombrado para evitar conflictos con sobrecarga de setDate
-    public void setDateFromTimestamp(long timestamp) {
-        this.date = new Date(timestamp);
-    }
-
     public String getUserId() {
         return userId;
     }
@@ -138,5 +96,19 @@ public class Expense {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    /**
+     * Convierte el objeto a un Map para Firebase
+     */
+    public Map<String, Object> toMap() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("title", title);
+        result.put("amount", amount);
+        result.put("description", description);
+        result.put("date", date);
+        result.put("userId", userId);
+        result.put("imageUrl", imageUrl);
+        return result;
     }
 }

@@ -4,9 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/material_on_surface_stroke">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,97 +16,112 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- Header con título y monto -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
 
             <TextView
                 android:id="@+id/textViewExpenseTitle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textSize="16sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                tools:text="Compras supermercado" />
+                android:textColor="?attr/colorOnSurface"
+                tools:text="Almuerzo restaurante" />
 
             <TextView
                 android:id="@+id/textViewExpenseAmount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#D32F2F"
-                android:textSize="16sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                tools:text="-$150.50" />
+                android:textColor="?attr/colorError"
+                tools:text="S/ 25.50" />
 
         </LinearLayout>
 
+        <!-- Descripción -->
         <TextView
             android:id="@+id/textViewExpenseDescription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
             android:textSize="14sp"
-            tools:text="Compras semanales de alimentos" />
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:layout_marginBottom="8dp"
+            tools:text="Almuerzo en restaurante del centro" />
 
+        <!-- Fecha -->
         <TextView
             android:id="@+id/textViewExpenseDate"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@android:color/darker_gray"
             android:textSize="12sp"
-            tools:text="26/06/2025" />
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:layout_marginBottom="12dp"
+            tools:text="27/06/2025" />
 
+        <!-- Botones de imagen -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="8dp">
+            android:layout_marginBottom="8dp"
+            android:gravity="start">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonViewReceipt"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/view_receipt"
-                android:textSize="12sp"
-                style="@style/Widget.MaterialComponents.Button.TextButton" />
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:text="VER COMPROBANTE"
+                android:textSize="10sp"
+                style="@style/Widget.Material3.Button.TextButton"
+                app:icon="@android:drawable/ic_menu_gallery"
+                app:iconSize="16dp"
+                android:visibility="gone" />
 
-            <Button
-                android:id="@+id/buttonDownloadReceipt"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/download_image"
-                android:textSize="12sp"
-                style="@style/Widget.MaterialComponents.Button.TextButton" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonDownloadImage"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="DESCARGAR IMAGEN"
+                android:textSize="10sp"
+                style="@style/Widget.Material3.Button.TextButton"
+                app:icon="@android:drawable/stat_sys_download"
+                app:iconSize="16dp"
+                android:visibility="gone" />
+
         </LinearLayout>
 
+        <!-- Botones de acción -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="8dp">
+            android:gravity="end">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonEditExpense"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/edit"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:text="Editar"
                 android:textSize="12sp"
-                style="@style/Widget.MaterialComponents.Button.TextButton" />
+                style="@style/Widget.Material3.Button.TextButton" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonDeleteExpense"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/delete"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Eliminar"
                 android:textSize="12sp"
-                android:textColor="#D32F2F"
-                style="@style/Widget.MaterialComponents.Button.TextButton" />
+                style="@style/Widget.Material3.Button.TextButton"
+                android:textColor="?attr/colorError" />
+
         </LinearLayout>
 
     </LinearLayout>

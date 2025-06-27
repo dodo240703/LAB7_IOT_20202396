@@ -263,48 +263,15 @@ public class ExpensesFragment extends Fragment {
     }
 
     private void openImagePicker() {
-        try {
-            Intent intent = new Intent();
-            intent.setType("image/*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+        // Usar el ActivityResultLauncher moderno en lugar de métodos deprecados
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        intent.setType("image/*");
 
-            // Usar Intent.createChooser para mostrar un selector más amigable
-            startActivityForResult(
-                    Intent.createChooser(intent, "Seleccionar imagen"),
-                    REQUEST_IMAGE_PICK
-            );
+        Log.d(TAG, "Lanzando intent de selección de imagen");
+        Toast.makeText(requireContext(), "Abriendo galería...", Toast.LENGTH_SHORT).show();
 
-            // Registrar el intento para depuración
-            Log.d(TAG, "Intent para seleccionar imagen lanzado");
-        } catch (Exception e) {
-            Log.e(TAG, "Error al abrir selector de imágenes: " + e.getMessage(), e);
-            Toast.makeText(requireContext(),
-                    "Error al abrir el selector de imágenes: " + e.getMessage(),
-                    Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    // Implementamos el método tradicional como respaldo
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_IMAGE_PICK && resultCode == Activity.RESULT_OK) {
-            if (data != null && data.getData() != null) {
-                selectedImageUri = data.getData();
-                Log.d(TAG, "Imagen seleccionada (método tradicional): " + selectedImageUri);
-
-                // Actualizar UI si el diálogo sigue visible
-                if (currentDialogView != null) {
-                    TextView statusText = currentDialogView.findViewById(R.id.tvImageStatus);
-                    if (statusText != null) {
-                        statusText.setText("Imagen seleccionada");
-                    }
-                }
-            }
-        }
+        // Usar el launcher moderno
+        imagePickerLauncher.launch(intent);
     }
 
     private void showEditDeleteDialog(Expense expense) {
@@ -441,85 +408,83 @@ public class ExpensesFragment extends Fragment {
         financeService.saveExpense(expense)
                 .addOnSuccessListener(aVoid -> {
                     binding.progressBar.setVisibility(View.GONE);
-                    // Limpiar la URI de la imagen seleccionada
-                    selectedImageUri = null;
-                    Toast.makeText(requireContext(), R.string.expense_saved, Toast.LENGTH_SHORT).show();
-                    loadExpenses(); // Recargar lista
+                    Toast.makeText(requireContext(), "Gasto guardado exitosamente", Toast.LENGTH_SHORT).show();
+                    loadExpenses(); // Recargar la lista
+                    selectedImageUri = null; // Limpiar selección de imagen
                 })
                 .addOnFailureListener(e -> {
                     binding.progressBar.setVisibility(View.GONE);
-                    Toast.makeText(requireContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Error al guardar: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
     private void updateExpense(Expense expense) {
         binding.progressBar.setVisibility(View.VISIBLE);
 
-        // Si hay una imagen seleccionada, subirla primero
+        // Si hay una nueva imagen seleccionada, subirla primero
         if (selectedImageUri != null) {
-            // Mostrar mensaje de carga
-            Toast.makeText(requireContext(), "Actualizando imagen...", Toast.LENGTH_SHORT).show();
+            String userId = financeService.getCurrentUser().getUid();
+            servicioAlmacenamiento.guardarArchivo(selectedImageUri, "egreso", userId)
+                    .addOnSuccessListener(imageUrl -> {
+                        // Eliminar imagen anterior si existe
+                        if (expense.getImageUrl() != null && !expense.getImageUrl().isEmpty()) {
+                            servicioAlmacenamiento.eliminarArchivo(expense.getImageUrl());
+                        }
 
-            // Si el gasto ya tenía una imagen, eliminarla primero
-            if (expense.getImageUrl() != null && !expense.getImageUrl().isEmpty()) {
-                servicioAlmacenamiento.eliminarArchivo(expense.getImageUrl())
-                        .addOnCompleteListener(task -> {
-                            // Continuar con la subida de la nueva imagen independientemente del resultado
-                            uploadNewImageAndUpdate(expense);
-                        });
-            } else {
-                // No había imagen previa, subir la nueva directamente
-                uploadNewImageAndUpdate(expense);
-            }
+                        // Establecer nueva URL de imagen
+                        expense.setImageUrl(imageUrl.toString());
+                        finishUpdateExpense(expense);
+                    })
+                    .addOnFailureListener(e -> {
+                        binding.progressBar.setVisibility(View.GONE);
+                        Toast.makeText(requireContext(), "Error al subir la imagen: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
         } else {
-            // No hay cambios en la imagen, actualizar el gasto directamente
+            // No hay nueva imagen, actualizar directamente
             finishUpdateExpense(expense);
         }
-    }
-
-    private void uploadNewImageAndUpdate(Expense expense) {
-        String userId = financeService.getCurrentUser().getUid();
-        servicioAlmacenamiento.guardarArchivo(selectedImageUri, "egreso", userId)
-                .addOnSuccessListener(imageUrl -> {
-                    // Establecer la URL de la imagen en el gasto
-                    expense.setImageUrl(imageUrl.toString());
-
-                    // Guardar el gasto con la URL de la imagen
-                    finishUpdateExpense(expense);
-                })
-                .addOnFailureListener(e -> {
-                    binding.progressBar.setVisibility(View.GONE);
-                    Toast.makeText(requireContext(), "Error al subir la imagen: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
     }
 
     private void finishUpdateExpense(Expense expense) {
         financeService.updateExpense(expense)
                 .addOnSuccessListener(aVoid -> {
                     binding.progressBar.setVisibility(View.GONE);
-                    // Limpiar la URI de la imagen seleccionada
-                    selectedImageUri = null;
-                    Toast.makeText(requireContext(), R.string.expense_updated, Toast.LENGTH_SHORT).show();
-                    loadExpenses(); // Recargar lista
+                    Toast.makeText(requireContext(), "Gasto actualizado exitosamente", Toast.LENGTH_SHORT).show();
+                    loadExpenses(); // Recargar la lista
+                    selectedImageUri = null; // Limpiar selección de imagen
                 })
                 .addOnFailureListener(e -> {
                     binding.progressBar.setVisibility(View.GONE);
-                    Toast.makeText(requireContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Error al actualizar: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
     private void deleteExpense(Expense expense) {
         binding.progressBar.setVisibility(View.VISIBLE);
 
+        // Eliminar imagen asociada si existe
+        if (expense.getImageUrl() != null && !expense.getImageUrl().isEmpty()) {
+            servicioAlmacenamiento.eliminarArchivo(expense.getImageUrl())
+                    .addOnCompleteListener(task -> {
+                        // Continuar con la eliminación del gasto independientemente del resultado de eliminar la imagen
+                        finishDeleteExpense(expense);
+                    });
+        } else {
+            // No hay imagen, eliminar directamente
+            finishDeleteExpense(expense);
+        }
+    }
+
+    private void finishDeleteExpense(Expense expense) {
         financeService.deleteExpense(expense.getId())
                 .addOnSuccessListener(aVoid -> {
                     binding.progressBar.setVisibility(View.GONE);
-                    Toast.makeText(requireContext(), R.string.expense_deleted, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Gasto eliminado exitosamente", Toast.LENGTH_SHORT).show();
                     loadExpenses(); // Recargar lista
                 })
                 .addOnFailureListener(e -> {
                     binding.progressBar.setVisibility(View.GONE);
-                    Toast.makeText(requireContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Error al eliminar: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -527,5 +492,7 @@ public class ExpensesFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+        currentDialogView = null;
+        selectedImageUri = null;
     }
 }

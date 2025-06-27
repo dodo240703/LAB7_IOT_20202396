@@ -1,0 +1,16 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Reglas para imágenes de gastos e ingresos
+    match /images/{category}/{userId}/{filename} {
+      // Permitir lectura y escritura solo al usuario propietario
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Regla de fallback para otros archivos
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+

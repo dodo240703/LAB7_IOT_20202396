@@ -1,17 +1,15 @@
 {
   "rules": {
-    ".read": "auth != null",
-    ".write": "auth != null",
     "expenses": {
-      "$expense_id": {
-        ".read": "auth != null && data.child('userId').val() === auth.uid",
-        ".write": "auth != null && (!data.exists() || data.child('userId').val() === auth.uid)"
+      "$expenseId": {
+        ".read": "auth != null && auth.uid == data.child('userId').val()",
+        ".write": "auth != null && (auth.uid == data.child('userId').val() || auth.uid == newData.child('userId').val())"
       }
     },
     "incomes": {
-      "$income_id": {
-        ".read": "auth != null && data.child('userId').val() === auth.uid",
-        ".write": "auth != null && (!data.exists() || data.child('userId').val() === auth.uid)"
+      "$incomeId": {
+        ".read": "auth != null && auth.uid == data.child('userId').val()",
+        ".write": "auth != null && (auth.uid == data.child('userId').val() || auth.uid == newData.child('userId').val())"
       }
     }
   }

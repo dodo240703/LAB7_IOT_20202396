@@ -313,12 +313,6 @@ public class FinanceService {
 
     // --- CLASES AUXILIARES ---
 
-    // Clase para manejar respuesta asíncrona de Firebase
-    public interface DataCallback<T> {
-        void onSuccess(T result);
-        void onError(Exception e);
-    }
-
     // Clase para el resumen financiero
     public static class FinancialSummary {
         private double totalIncome;
@@ -354,5 +348,13 @@ public class FinanceService {
         public void setBalance(double balance) {
             this.balance = balance;
         }
+    }
+
+    /**
+     * Interface para callbacks de datos
+     */
+    public interface DataCallback<T> {
+        void onSuccess(T result);
+        void onError(Exception e);
     }
 }
