@@ -16,9 +16,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-/**
- * Clase de servicio para gestionar operaciones con Firebase Realtime Database
- */
+
 public class FinanceService {
 
     private static final String EXPENSES_PATH = "expenses";
@@ -350,9 +348,7 @@ public class FinanceService {
         }
     }
 
-    /**
-     * Interface para callbacks de datos
-     */
+
     public interface DataCallback<T> {
         void onSuccess(T result);
         void onError(Exception e);

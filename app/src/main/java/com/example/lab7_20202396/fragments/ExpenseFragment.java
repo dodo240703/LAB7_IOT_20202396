@@ -191,14 +191,19 @@ public class ExpenseFragment extends Fragment {
         if (auth.getCurrentUser() != null) {
             String userId = auth.getCurrentUser().getUid();
 
+            // Consulta mejorada con ordenamiento por fecha (más reciente primero)
             db.collection("expenses")
                     .whereEqualTo("userId", userId)
+                    .orderBy("date", com.google.firebase.firestore.Query.Direction.DESCENDING)
                     .get()
                     .addOnSuccessListener(queryDocumentSnapshots -> {
                         expenseList.clear();
                         for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                             Expense expense = document.toObject(Expense.class);
-                            expenseList.add(expense);
+                            if (expense != null) {
+                                expense.setId(document.getId()); // Asegurar que el ID esté configurado
+                                expenseList.add(expense);
+                            }
                         }
 
                         if (expenseList.isEmpty()) {
@@ -211,9 +216,55 @@ public class ExpenseFragment extends Fragment {
                         showLoading(false);
                     })
                     .addOnFailureListener(e -> {
+                        Log.e(TAG, "Error al cargar egresos: " + e.getMessage(), e);
+                        showLoading(false);
+
+                        // Si el error es por índice faltante, usar consulta alternativa
+                        if (e.getMessage() != null && e.getMessage().contains("index")) {
+                            loadExpensesWithoutOrder();
+                        } else {
+                            Toast.makeText(requireContext(), "Error al cargar egresos: " + e.getMessage(),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        }
+    }
+
+    // Método alternativo sin ordenamiento para evitar el error de índice
+    private void loadExpensesWithoutOrder() {
+        if (auth.getCurrentUser() != null) {
+            String userId = auth.getCurrentUser().getUid();
+
+            db.collection("expenses")
+                    .whereEqualTo("userId", userId)
+                    .get()
+                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                        expenseList.clear();
+                        for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                            Expense expense = document.toObject(Expense.class);
+                            if (expense != null) {
+                                expense.setId(document.getId());
+                                expenseList.add(expense);
+                            }
+                        }
+
+                        // Ordenar localmente por fecha (más reciente primero)
+                        expenseList.sort((e1, e2) -> e2.getDate().compareTo(e1.getDate()));
+
+                        if (expenseList.isEmpty()) {
+                            binding.textViewEmptyExpense.setVisibility(View.VISIBLE);
+                        } else {
+                            binding.textViewEmptyExpense.setVisibility(View.GONE);
+                        }
+
+                        adapter.notifyDataSetChanged();
+                        showLoading(false);
+                    })
+                    .addOnFailureListener(e -> {
+                        showLoading(false);
+                        Log.e(TAG, "Error al cargar egresos (sin orden): " + e.getMessage(), e);
                         Toast.makeText(requireContext(), "Error al cargar egresos: " + e.getMessage(),
                                 Toast.LENGTH_SHORT).show();
-                        showLoading(false);
                     });
         }
     }
