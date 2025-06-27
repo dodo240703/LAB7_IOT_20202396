@@ -2,18 +2,22 @@ package com.example.lab7_20202396;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
 
 import com.example.lab7_20202396.databinding.ActivityLoginBinding;
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -32,6 +36,7 @@ import com.google.firebase.auth.GoogleAuthProvider;
 
 public class LoginActivity extends AppCompatActivity {
 
+    private static final String TAG = "LoginActivity";
     private ActivityLoginBinding binding;
     private FirebaseAuth firebaseAuth;
     private GoogleSignInClient googleSignInClient;
@@ -41,6 +46,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -50,8 +56,11 @@ public class LoginActivity extends AppCompatActivity {
         // Configurar botón de inicio de sesión
         binding.buttonLogin.setOnClickListener(v -> loginWithEmail());
 
-        // Configurar botón de registro
-        binding.buttonRegister.setOnClickListener(v -> registerUser());
+        // Configurar botón de registro - Redirige a la actividad de registro
+        binding.buttonRegister.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+            startActivity(intent);
+        });
 
         // Configurar inicio de sesión con Google
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -59,31 +68,37 @@ public class LoginActivity extends AppCompatActivity {
                 .requestEmail()
                 .build();
         googleSignInClient = GoogleSignIn.getClient(this, gso);
-        binding.buttonGoogleLogin.setOnClickListener(v -> signInWithGoogle());
 
-        // Configurar inicio de sesión con Facebook
-        facebookCallbackManager = CallbackManager.Factory.create();
-        LoginButton loginButton = new LoginButton(this);
-        loginButton.setPermissions("email", "public_profile");
-        loginButton.registerCallback(facebookCallbackManager, new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
-                handleFacebookAccessToken(loginResult.getAccessToken());
-            }
-
-            @Override
-            public void onCancel() {
-                // Cancelado por usuario
-            }
-
-            @Override
-            public void onError(FacebookException error) {
-                Toast.makeText(LoginActivity.this, "Error: " + error.getMessage(),
-                        Toast.LENGTH_SHORT).show();
-            }
+        binding.buttonGoogleLogin.setOnClickListener(v -> {
+            binding.progressBarLogin.setVisibility(View.VISIBLE);
+            signInWithGoogle();
         });
 
-        binding.buttonFacebookLogin.setOnClickListener(v -> loginButton.performClick());
+        // Configuramos el botón de Facebook pero mostramos una alerta si se usa
+        setupFacebookLogin();
+    }
+
+    private void setupFacebookLogin() {
+        try {
+            // Inicializar Facebook SDK
+            FacebookSdk.sdkInitialize(getApplicationContext());
+
+            facebookCallbackManager = CallbackManager.Factory.create();
+
+            // Configuramos el botón, pero si se pulsa mostramos una alerta
+            binding.buttonFacebookLogin.setOnClickListener(v -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Inicio de sesión con Facebook no disponible");
+                builder.setMessage("Para utilizar el inicio de sesión con Facebook, necesitas " +
+                        "configurar una aplicación válida en Facebook Developers Console y " +
+                        "actualizar los valores de configuración en la aplicación.");
+                builder.setPositiveButton("Entendido", null);
+                builder.show();
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error configurando Facebook: " + e.getMessage());
+            binding.buttonFacebookLogin.setEnabled(false);
+        }
     }
 
     @Override
@@ -96,74 +111,35 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    // Método para iniciar sesión con email y contraseña
     private void loginWithEmail() {
         String email = binding.editTextEmail.getText().toString().trim();
         String password = binding.editTextPassword.getText().toString().trim();
 
-        if (email.isEmpty()) {
-            binding.textInputLayoutEmail.setError(getString(R.string.required_field));
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(LoginActivity.this, "Por favor complete todos los campos", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (password.isEmpty()) {
-            binding.textInputLayoutPassword.setError(getString(R.string.required_field));
-            return;
-        }
+        // Mostrar progreso
+        binding.progressBarLogin.setVisibility(View.VISIBLE);
 
-        showProgress(true);
-
+        // Autenticar con Firebase
         firebaseAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        showProgress(false);
-                        if (task.isSuccessful()) {
-                            // Inicio de sesión exitoso
-                            startMainActivity();
-                        } else {
-                            // Si el inicio de sesión falla, mostrar un mensaje al usuario
-                            Toast.makeText(LoginActivity.this, getString(R.string.login_error),
-                                    Toast.LENGTH_SHORT).show();
-                        }
+                .addOnCompleteListener(this, task -> {
+                    binding.progressBarLogin.setVisibility(View.GONE);
+                    if (task.isSuccessful()) {
+                        // Inicio de sesión exitoso
+                        startMainActivity();
+                    } else {
+                        // Si falla el inicio de sesión, mostrar mensaje
+                        Toast.makeText(LoginActivity.this, "Autenticación fallida. Revise sus credenciales.",
+                                Toast.LENGTH_SHORT).show();
                     }
                 });
     }
 
-    private void registerUser() {
-        String email = binding.editTextEmail.getText().toString().trim();
-        String password = binding.editTextPassword.getText().toString().trim();
-
-        if (email.isEmpty()) {
-            binding.textInputLayoutEmail.setError(getString(R.string.required_field));
-            return;
-        }
-
-        if (password.isEmpty()) {
-            binding.textInputLayoutPassword.setError(getString(R.string.required_field));
-            return;
-        }
-
-        showProgress(true);
-
-        firebaseAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        showProgress(false);
-                        if (task.isSuccessful()) {
-                            // Registro exitoso
-                            Toast.makeText(LoginActivity.this, getString(R.string.register_success),
-                                    Toast.LENGTH_SHORT).show();
-                            startMainActivity();
-                        } else {
-                            // Si el registro falla, mostrar un mensaje al usuario
-                            Toast.makeText(LoginActivity.this, getString(R.string.register_error),
-                                    Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-    }
-
+    // Método para iniciar sesión con Google
     private void signInWithGoogle() {
         Intent signInIntent = googleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
@@ -173,65 +149,48 @@ public class LoginActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        // Resultado para inicio de sesión con Facebook
-        facebookCallbackManager.onActivityResult(requestCode, resultCode, data);
-
-        // Resultado para inicio de sesión con Google
+        // Resultado de inicio de sesión con Google
         if (requestCode == RC_SIGN_IN) {
+            binding.progressBarLogin.setVisibility(View.GONE);
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
+                // El inicio de sesión con Google fue exitoso, autenticar con Firebase
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 firebaseAuthWithGoogle(account.getIdToken());
             } catch (ApiException e) {
-                Toast.makeText(this, "Error de Google: " + e.getMessage(),
+                // Falló el inicio de sesión con Google
+                binding.progressBarLogin.setVisibility(View.GONE);
+                Toast.makeText(LoginActivity.this, "Error en el inicio de sesión con Google: " + e.getStatusCode(),
                         Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Google sign in failed", e);
             }
         }
     }
 
+    // Método para autenticar con Firebase usando credenciales de Google
     private void firebaseAuthWithGoogle(String idToken) {
-        showProgress(true);
+        binding.progressBarLogin.setVisibility(View.VISIBLE);
+
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         firebaseAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        showProgress(false);
-                        if (task.isSuccessful()) {
-                            startMainActivity();
-                        } else {
-                            Toast.makeText(LoginActivity.this, "Error de autenticación con Google",
-                                    Toast.LENGTH_SHORT).show();
-                        }
+                .addOnCompleteListener(this, task -> {
+                    binding.progressBarLogin.setVisibility(View.GONE);
+                    if (task.isSuccessful()) {
+                        // Inicio de sesión exitoso
+                        startMainActivity();
+                    } else {
+                        // Falló el inicio de sesión
+                        Toast.makeText(LoginActivity.this, "Autenticación con Google fallida.",
+                                Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "signInWithCredential:failure", task.getException());
                     }
                 });
     }
 
-    private void handleFacebookAccessToken(AccessToken token) {
-        showProgress(true);
-        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
-        firebaseAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        showProgress(false);
-                        if (task.isSuccessful()) {
-                            startMainActivity();
-                        } else {
-                            Toast.makeText(LoginActivity.this, "Error de autenticación con Facebook",
-                                    Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-    }
-
-    private void showProgress(boolean show) {
-        binding.progressBarLogin.setVisibility(show ? View.VISIBLE : View.GONE);
-    }
-
+    // Método para iniciar MainActivity después de autenticación exitosa
     private void startMainActivity() {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
         startActivity(intent);
-        finish();
+        finish(); // Cerrar LoginActivity para que el usuario no pueda volver atrás
     }
 }

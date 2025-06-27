@@ -1,17 +1,22 @@
 package com.example.lab7_20202396.model;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
+/**
+ * Modelo para representar un gasto
+ */
 public class Expense {
     private String id;
     private String title;
     private double amount;
     private String description;
-    private Date date;
+    private Date date;  // Cambiado de long a Date
     private String userId;
 
+    // Constructor vacío requerido para Firebase
     public Expense() {
-        // Constructor vacío requerido para Firebase
     }
 
     public Expense(String id, String title, double amount, String description, Date date, String userId) {
@@ -23,6 +28,46 @@ public class Expense {
         this.userId = userId;
     }
 
+    // Constructor alternativo que acepta long para compatibilidad con código existente
+    public Expense(String id, String title, double amount, String description, long timestamp, String userId) {
+        this.id = id;
+        this.title = title;
+        this.amount = amount;
+        this.description = description;
+        this.date = new Date(timestamp);
+        this.userId = userId;
+    }
+
+    // Constructor sin ID para cuando se crea un nuevo gasto
+    public Expense(String title, double amount, String description, Date date, String userId) {
+        this.title = title;
+        this.amount = amount;
+        this.description = description;
+        this.date = date;
+        this.userId = userId;
+    }
+
+    // Constructor sin ID que acepta long para compatibilidad con código existente
+    public Expense(String title, double amount, String description, long timestamp, String userId) {
+        this.title = title;
+        this.amount = amount;
+        this.description = description;
+        this.date = new Date(timestamp);
+        this.userId = userId;
+    }
+
+    // Convertir a Map para Firebase
+    public Map<String, Object> toMap() {
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("title", title);
+        result.put("amount", amount);
+        result.put("description", description);
+        result.put("date", date);  // Firebase convertirá automáticamente Date a Timestamp
+        result.put("userId", userId);
+        return result;
+    }
+
+    // Getters y Setters
     public String getId() {
         return id;
     }
@@ -61,6 +106,16 @@ public class Expense {
 
     public void setDate(Date date) {
         this.date = date;
+    }
+
+    // Métodos adicionales para manejar conversiones de timestamp
+    public long getDateAsTimestamp() {
+        return date != null ? date.getTime() : 0;
+    }
+
+    // Renombrado para evitar conflictos con sobrecarga de setDate
+    public void setDateFromTimestamp(long timestamp) {
+        this.date = new Date(timestamp);
     }
 
     public String getUserId() {

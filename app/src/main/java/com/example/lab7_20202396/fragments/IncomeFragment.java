@@ -202,7 +202,9 @@ public class IncomeFragment extends Fragment {
             String userId = auth.getCurrentUser().getUid();
             String id = db.collection("incomes").document().getId();
 
-            Income income = new Income(id, title, amount, description, date, userId);
+            // Convertir Date a long (timestamp)
+            long timestamp = date.getTime();
+            Income income = new Income(id, title, amount, description, timestamp, userId);
 
             db.collection("incomes")
                     .document(id)

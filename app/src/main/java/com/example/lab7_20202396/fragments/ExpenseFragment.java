@@ -109,10 +109,10 @@ public class ExpenseFragment extends Fragment {
         View dialogView = LayoutInflater.from(requireContext())
                 .inflate(R.layout.dialog_add_expense, null);
 
-        EditText editTextTitle = dialogView.findViewById(R.id.editTextExpenseTitle);
-        EditText editTextAmount = dialogView.findViewById(R.id.editTextExpenseAmount);
-        EditText editTextDescription = dialogView.findViewById(R.id.editTextExpenseDescription);
-        EditText editTextDate = dialogView.findViewById(R.id.editTextExpenseDate);
+        EditText editTextTitle = dialogView.findViewById(R.id.etTitle);
+        EditText editTextAmount = dialogView.findViewById(R.id.etAmount);
+        EditText editTextDescription = dialogView.findViewById(R.id.etDescription);
+        EditText editTextDate = dialogView.findViewById(R.id.etDate);
 
         // Si estamos editando, llenar campos y deshabilitar título según requisitos
         if (isEdit) {
@@ -202,7 +202,9 @@ public class ExpenseFragment extends Fragment {
             String userId = auth.getCurrentUser().getUid();
             String id = db.collection("expenses").document().getId();
 
-            Expense expense = new Expense(id, title, amount, description, date, userId);
+            // Convertir Date a long (timestamp)
+            long timestamp = date.getTime();
+            Expense expense = new Expense(id, title, amount, description, timestamp, userId);
 
             db.collection("expenses")
                     .document(id)

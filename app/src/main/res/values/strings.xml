@@ -9,6 +9,7 @@
     <string name="login">Iniciar sesión</string>
     <string name="register">Registrarse</string>
     <string name="register_new_account">¿No tienes cuenta? Regístrate</string>
+    <string name="already_have_account">¿Ya tienes cuenta? Inicia sesión</string>
     <string name="login_with_google">Iniciar sesión con Google</string>
     <string name="login_with_facebook">Iniciar sesión con Facebook</string>
     <string name="or">O</string>
@@ -29,6 +30,11 @@
     <string name="delete">Eliminar</string>
     <string name="add">Añadir</string>
     <string name="edit">Editar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="add_expense">Agregar gasto</string>
+    <string name="edit_expense">Editar gasto</string>
+    <string name="add_income">Agregar ingreso</string>
+    <string name="edit_income">Editar ingreso</string>
 
     <!-- Mensajes -->
     <string name="login_success">Inicio de sesión exitoso</string>
@@ -57,6 +63,6 @@
 
     <!-- Firebase y Facebook config (Valores de ejemplo) -->
     <string name="default_web_client_id">123456789012-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com</string>
-    <string name="facebook_app_id">123456789012345</string>
-    <string name="facebook_client_token">abcdef123456ghijkl7890mnopqrstuv</string>
+    <string name="facebook_app_id">1223362608997424</string>
+    <string name="facebook_client_token">6d7d192f071fd4f1a87f6c149057d80d</string>
 </resources>
